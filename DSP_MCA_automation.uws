@@ -138,17 +138,15 @@ while true	// main loop while
 		KBD(VK_CTRL,UP,70)
 		dtime=getstr(0,0,1,10)
 
-		deadtime=0
+		deadtime=5
 		deadtimeh=val(copy(dtime,1,2))*3600
 		deadtimem=val(copy(dtime,4,2))*60
 		deadtimes=val(copy(dtime,7,2))
-		deadtime=deadtime+deadtimeh+deadtimem+deadtimes+5
+		deadtime=deadtime+deadtimeh+deadtimem+deadtimes
 		sleep(deadtime)
 
 		saveimgfile=filename+cnt+".png"
 		savedatafile=filename+cnt+".txt"
-		saveimgfile_s=filename+cnt+"_s.png"
-		savedatafile_s=filename+cnt+"_s.txt"
 
 		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
 
@@ -232,11 +230,11 @@ while true	// main loop while
 		KBD(VK_CTRL,UP,70)
 		dtime=getstr(0,0,1,10)
 
-		deadtime=0
+		deadtime=5
 		deadtimeh=val(copy(dtime,1,2))*3600
 		deadtimem=val(copy(dtime,4,2))*60
 		deadtimes=val(copy(dtime,7,2))
-		deadtime=deadtime+deadtimeh+deadtimem+deadtimes+5
+		deadtime=deadtime+deadtimeh+deadtimem+deadtimes
 		sleep(deadtime)
 
 		saveimgfile=filename+cnt+".png"
