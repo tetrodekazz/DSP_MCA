@@ -213,6 +213,7 @@ while true	// main loop while
 		endtime=gettime()+sc		// Preset endtime
 		
 		BTN(LEFT,CLICK,159,37,300)	// Start
+		sleep(0.3)
 
 		while (endtime>=gettime())	// Measuring,,,
 			now_at=endtime-gettime()
@@ -286,7 +287,6 @@ while true	// main loop while
 		if MsgBox("Counting has completed. "+G_TIME_YY2+"/"+G_TIME_MM2+"/"+G_TIME_DD2+" "+G_TIME_HH2+":"+G_TIME_NN2+":"+G_TIME_SS2, BTN_OK) then break
 	wend
 	sendstr(0,filename)
-
 
 wend	// main loop wend
 ////////////////////////////////////////////////////////////////////////
