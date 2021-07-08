@@ -1,0 +1,295 @@
+//////////////////////////////////////////////////////////////////
+//
+// Longtime automatic measurement script for TechnoAP spectrum analyzer software.
+// by OK Electric 2012-2021
+//
+// Open this script from UWSC.exe after starting up of high voltage.
+// If something wrong with the operation, quit dsp_mca.exe, exit this script and restart them again.
+//
+// V5.0 2021/7/7 SDU version
+//
+//////////////////////////////////////////////////////////////////
+
+day1=86400 //(1day=86000 sec. If test this script for bug fix, the time can be arranged shorter.)
+
+//////////////////////////////////////////////////////////////////
+
+//Did DSP_MCA start up?
+ifb GETID("DSP MCA 3.2.0")<0 then
+	exec("c:\technoAP\DSP-MCA\dsp_mca.exe")
+	while GETID("DSP MCA 3.2.0")<0
+	wend
+else
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)	// remove "black" part to move windows outside screen.
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,800,1210,742,10)
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),-1210,0,1210,742,10)
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,800,1210,742,10)
+endif
+ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)	// window location of dsp_mca
+
+////////////////////////////////////////////////////////////////////////
+while true	// main loop while
+
+	while true
+		tm=input("Enter counting time in seconds. Script exits only press enter key.")
+		if (tm>=1 and chknum(tm)=1) then break else exitexit
+	wend
+
+	dt=int(tm/day1)	// day
+	sc=tm MOD day1	// rest sedonds
+
+	filename="dummy"
+	inputfile=0
+	while (inputfile=0)
+		filename=(input("Enter spectrum file name (<#DBL>.txt<#DBL> is automatically added). Script exits only press enter key."))
+		if length(filename)=0 then exitexit
+			ifb (pos("<#DBL>",filename)<>0 or pos("\",filename)<>0 or pos("/",filename)<>0 or pos(":",filename)<>0 or pos("*",filename)<>0 or pos("<",filename)<>0 or pos(">",filename)<>0 or pos("|",filename)<>0)
+				MsgBox("\ / : * ? <#DBL> < > | are not allowed to use filename.", BTN_OK)
+			else
+				inputfile=1
+			endif
+	wend
+
+	filename=filename+"_"
+	select SLCTBOX(SLCT_RDO,0,"Do you need spectrum screenshot after completing the counting?","Yes","No")
+		case slct_1
+			sshot=1		// Yes
+		case slct_2
+			sshot=0		// No
+		default
+		exit
+	selend
+
+	select MsgBox("Counting is started to clear previous spectrum.", BTN_YES or BTN_ABORT)
+		case BTN_YES
+		case BTN_ABORT
+		exit
+		default
+		exit
+	selend
+
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+
+	BTN(LEFT,CLICK,65,289,300)	// Config window
+	BTN(LEFT,CLICK,65,289,100)	// Config window
+	sleep(0.3)
+
+	SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
+
+	ifb dt>=1
+		if day1=86400
+			SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"24:00:00")
+		else
+			sch=int(day1/3600)
+			scm=int((day1-sch*3600)/60)
+			scs=day1-sch*3600-scm*60
+			SendStr(GETID("DSP MCA 3.2.0","LVDChild"),sch+":"+scm+":"+scs)
+		endif
+	else
+		sch=int(sc/3600)
+		scm=int((sc-sch*3600)/60)
+		scs=sc-sch*3600-scm*60
+		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),sch+":"+scm+":"+scs)
+	endif
+
+	sleep(0.3)
+	KBD(VK_RETURN,CLICK,70)
+	sleep(0.3)
+
+	BTN(LEFT,CLICK,121,283,300)	// Histogram window
+	BTN(LEFT,CLICK,121,283,100)	// Histogram window
+	sleep(0.3)
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+	BTN(LEFT,CLICK,190,36,300)	// stop
+	sleep(2)
+	BTN(LEFT,CLICK,87,36,300)	// Config
+	sleep(2)
+	BTN(LEFT,CLICK,120,33,300)	// Clear
+	sleep(2)
+
+	cnt=1
+
+	while (dt>0)
+		dt=dt-1
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+		sleep(0.2)
+
+		gettime()			// adjustment for 0 sec.
+		while G_TIME_ZZ<>0
+			gettime()
+		wend
+
+		endtime=gettime()+day1		// presest after 1 day
+		BTN(LEFT,CLICK,159,37,300) 	// Start
+
+		while (endtime>=gettime())	// Measureing		
+			now_at=endtime-gettime()
+			now_at_h=int((now_at-int(now_at/86400))/3600)
+			now_at_m=int((now_at-now_at_h*3600)/60)
+			now_at_s=now_at-now_at_h*3600-now_at_m*60
+			fukidasi("Count: "+tm+" sec. Until: "+dt+"day "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
+			sleep (0.2)
+		wend
+
+		BTN(LEFT,DOWN,1161,197,70)	// read deadtime
+		BTN(LEFT,UP,1100,197,70)
+		KBD(VK_CTRL,DOWN,70)
+		KBD(VK_C,CLICK,70)
+		KBD(VK_CTRL,UP,70)
+		dtime=getstr(0,0,1,10)
+
+		deadtime=0
+		deadtimeh=val(copy(dtime,1,2))*3600
+		deadtimem=val(copy(dtime,4,2))*60
+		deadtimes=val(copy(dtime,7,2))
+		deadtime=deadtime+deadtimeh+deadtimem+deadtimes+5
+		sleep(deadtime)
+
+		saveimgfile=filename+cnt+".png"
+		savedatafile=filename+cnt+".txt"
+		saveimgfile_s=filename+cnt+"_s.png"
+		savedatafile_s=filename+cnt+"_s.txt"
+
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+
+		ifb sshot=1 then		// snapshot screen
+			ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)		
+			KBD(VK_CTRL,DOWN,40)
+			KBD(VK_I,CLICK,40)
+			KBD(VK_CTRL,UP,40)
+			sleep(1)
+			ACW(GETID("save image (.png)","#32770",0.3),725,289,656,383,100)
+			SendStr(GETID("save image (.png)","#32770",0.3),saveimgfile)
+			sleep(0.3)
+			KBD(VK_RETURN,CLICK,40)
+			sleep(1)
+		else
+		endif
+
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+		KBD(VK_CTRL,DOWN,70)		// save histogram
+		KBD(VK_SHIFT,DOWN,70)
+		KBD(VK_S,CLICK,70)
+		KBD(VK_SHIFT,UP,70)
+		KBD(VK_CTRL,UP,70)
+		sleep(1)
+		SendStr(GETID("save histogram data","#32770",0.3),savedatafile)
+		sleep(0.3)
+		KBD(VK_RETURN,CLICK,70)
+
+		sleep(1)			// wait for 1 sec.
+		cnt=cnt+1
+	wend
+
+	ifb (sc>0)
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+		sleep(0.3)
+
+		BTN(LEFT,CLICK,65,289,300)	// Config window
+		BTN(LEFT,CLICK,65,289,100)	// Config window
+		sleep(0.3)
+
+		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
+
+		sch=int(sc/3600)
+		scm=int((sc-sch*3600)/60)
+		scs=sc-sch*3600-scm*60
+		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),sch+":"+scm+":"+scs)
+
+		sleep(0.3)
+		KBD(VK_RETURN,CLICK,70)
+		sleep(0.3)
+
+		BTN(LEFT,CLICK,121,283,300)	// Histogram window
+		BTN(LEFT,CLICK,121,283,100) 
+		sleep(0.3)
+
+		BTN(LEFT,CLICK,87,36,300)	// Config
+		sleep(2)
+	
+		gettime()
+		while G_TIME_ZZ<>0
+			gettime()
+		wend
+
+		endtime=gettime()+sc		// Preset endtime
+		
+		BTN(LEFT,CLICK,159,37,300)	// Start
+
+		while (endtime>=gettime())	// Measuring,,,
+			now_at=endtime-gettime()
+			now_at_h=int(now_at/3600)
+			now_at_m=int((now_at-now_at_h*3600)/60)
+			now_at_s=now_at-now_at_h*3600-now_at_m*60
+			fukidasi("Count: "+tm+" sec. Until: "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
+			sleep (0.2)
+		wend
+
+		BTN(LEFT,DOWN,1161,197,70)	// read deadtime
+		BTN(LEFT,UP,1100,197,70)
+		KBD(VK_CTRL,DOWN,70)
+		KBD(VK_C,CLICK,70)
+		KBD(VK_CTRL,UP,70)
+		dtime=getstr(0,0,1,10)
+
+		deadtime=0
+		deadtimeh=val(copy(dtime,1,2))*3600
+		deadtimem=val(copy(dtime,4,2))*60
+		deadtimes=val(copy(dtime,7,2))
+		deadtime=deadtime+deadtimeh+deadtimem+deadtimes+5
+		sleep(deadtime)
+
+		saveimgfile=filename+cnt+".png"
+		savedatafile=filename+cnt+".txt"
+
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+//		BTN(LEFT,CLICK,190,36,300)	// stop
+		
+		ifb sshot=1 then		// Snapshot screen
+			ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)		
+			KBD(VK_CTRL,DOWN,40)
+			KBD(VK_I,CLICK,40)
+			KBD(VK_CTRL,UP,40)
+
+			while GETID("save image (.png)","#32770")<0
+			wend
+
+			ACW(GETID("save image (.png)","#32770",0.3),725,289,656,383,10)
+			sleep(1)
+			KBD(VK_BACK,CLICK,40)
+			sleep(1)
+			SendStr(GETID("save image (.png)","#32770",0.3),saveimgfile)
+			sleep(0.3)
+			KBD(VK_RETURN,CLICK,40)
+			sleep(0.3)
+
+		else
+		endif
+		
+		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+		KBD(VK_CTRL,DOWN,70)		// save histogram
+		KBD(VK_SHIFT,DOWN,70)
+		KBD(VK_S,CLICK,70)
+		KBD(VK_SHIFT,UP,70)
+		KBD(VK_CTRL,UP,70)
+		sleep(1)
+		SendStr(GETID("save histogram data","#32770",0.3),savedatafile)
+		sleep(0.3)
+		KBD(VK_RETURN,CLICK,70)
+		sleep(1)			// wait 1 sec.
+	endif
+
+//////////////////////////////////////////////////////////////// END
+	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
+
+	sleep(0.3)
+	gettime()
+	while true
+		if MsgBox("Counting has completed. "+G_TIME_YY2+"/"+G_TIME_MM2+"/"+G_TIME_DD2+" "+G_TIME_HH2+":"+G_TIME_NN2+":"+G_TIME_SS2, BTN_OK) then break
+	wend
+	sendstr(0,filename)
+
+
+wend	// main loop wend
+////////////////////////////////////////////////////////////////////////
+exit
