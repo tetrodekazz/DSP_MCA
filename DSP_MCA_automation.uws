@@ -6,7 +6,7 @@
 // Open this script from UWSC.exe after starting up of high voltage.
 // If something wrong with the operation, quit dsp_mca.exe, exit this script and restart them again.
 //
-// V5.0 2021/7/7 SDU version
+// V5.1, 2021/7/9 SDU version
 //
 //////////////////////////////////////////////////////////////////
 
@@ -71,20 +71,15 @@ while true	// main loop while
 	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
 
 	BTN(LEFT,CLICK,65,289,300)	// Config window
-	BTN(LEFT,CLICK,65,289,100)	// Config window
 	sleep(0.3)
 
 	SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
 
 	ifb dt>=1
-		if day1=86400
-			SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"24:00:00")
-		else
-			sch=int(day1/3600)
-			scm=int((day1-sch*3600)/60)
-			scs=day1-sch*3600-scm*60
-			SendStr(GETID("DSP MCA 3.2.0","LVDChild"),sch+":"+scm+":"+scs)
-		endif
+		sch=int(day1/3600)
+		scm=int((day1-sch*3600)/60)
+		scs=day1-sch*3600-scm*60
+		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),sch+":"+scm+":"+scs)
 	else
 		sch=int(sc/3600)
 		scm=int((sc-sch*3600)/60)
@@ -97,15 +92,15 @@ while true	// main loop while
 	sleep(0.3)
 
 	BTN(LEFT,CLICK,121,283,300)	// Histogram window
-	BTN(LEFT,CLICK,121,283,100)	// Histogram window
 	sleep(0.3)
+
 	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
-	BTN(LEFT,CLICK,190,36,300)	// stop
-	sleep(2)
+	BTN(LEFT,CLICK,190,36,300)	// Stop
+	sleep(1)
 	BTN(LEFT,CLICK,87,36,300)	// Config
-	sleep(2)
+	sleep(3)
 	BTN(LEFT,CLICK,120,33,300)	// Clear
-	sleep(2)
+	sleep(1)
 
 	cnt=1
 
@@ -113,29 +108,36 @@ while true	// main loop while
 		dt=dt-1
 		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
 		sleep(0.2)
+		
+		ifb cnt >1
+			BTN(LEFT,CLICK,85,38,300)	// Config
+			sleep(3)
+		endif
 
 		gettime()			// adjustment for 0 sec.
 		while G_TIME_ZZ<>0
 			gettime()
+			endtime=gettime()+day1	// presest after 1 day
 		wend
 
-		endtime=gettime()+day1		// presest after 1 day
-		BTN(LEFT,CLICK,159,37,300) 	// Start
+		BTN(LEFT,CLICK,160,36,300) 	// Start
 
 		while (endtime>=gettime())	// Measureing		
-			now_at=endtime-gettime()
-			now_at_h=int((now_at-int(now_at/86400))/3600)
-			now_at_m=int((now_at-now_at_h*3600)/60)
-			now_at_s=now_at-now_at_h*3600-now_at_m*60
-			fukidasi("Count: "+tm+" sec. Until: "+dt+"day "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
-			sleep (0.2)
+//			now_at=endtime-gettime()
+//			now_at_h=int((now_at-int(now_at/86400))/3600)
+//			now_at_m=int((now_at-now_at_h*3600)/60)
+//			now_at_s=now_at-now_at_h*3600-now_at_m*60
+//			fukidasi("Count: "+tm+" sec. Until: "+dt+"day "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
+//			sleep (0.2)
 		wend
 
-		BTN(LEFT,DOWN,1161,197,70)	// read deadtime
-		BTN(LEFT,UP,1100,197,70)
+		sleep (1)
+		BTN(LEFT,CLICK,1137,200,300)	// read deadtime
+		BTN(LEFT,CLICK,1137,200,100)
 		KBD(VK_CTRL,DOWN,70)
 		KBD(VK_C,CLICK,70)
 		KBD(VK_CTRL,UP,70)
+		sleep(1)
 		dtime=getstr(0,0,1,10)
 
 		deadtime=5
@@ -156,7 +158,7 @@ while true	// main loop while
 			KBD(VK_I,CLICK,40)
 			KBD(VK_CTRL,UP,40)
 			sleep(1)
-			ACW(GETID("save image (.png)","#32770",0.3),725,289,656,383,100)
+			ACW(GETID("save image (.png)","#32770",0.3),207,123,656,476,10)
 			SendStr(GETID("save image (.png)","#32770",0.3),saveimgfile)
 			sleep(0.3)
 			KBD(VK_RETURN,CLICK,40)
@@ -184,7 +186,6 @@ while true	// main loop while
 		sleep(0.3)
 
 		BTN(LEFT,CLICK,65,289,300)	// Config window
-		BTN(LEFT,CLICK,65,289,100)	// Config window
 		sleep(0.3)
 
 		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
@@ -199,36 +200,35 @@ while true	// main loop while
 		sleep(0.3)
 
 		BTN(LEFT,CLICK,121,283,300)	// Histogram window
-		BTN(LEFT,CLICK,121,283,100) 
 		sleep(0.3)
 
-		BTN(LEFT,CLICK,87,36,300)	// Config
-		sleep(2)
+		BTN(LEFT,CLICK,85,38,300)	// Config
+		sleep(3)
 	
 		gettime()
 		while G_TIME_ZZ<>0
 			gettime()
+			endtime=gettime()+sc	// Preset endtime
 		wend
 
-		endtime=gettime()+sc		// Preset endtime
-		
-		BTN(LEFT,CLICK,159,37,300)	// Start
-		sleep(0.3)
+		BTN(LEFT,CLICK,160,36,300)	// Start
 
 		while (endtime>=gettime())	// Measuring,,,
-			now_at=endtime-gettime()
-			now_at_h=int(now_at/3600)
-			now_at_m=int((now_at-now_at_h*3600)/60)
-			now_at_s=now_at-now_at_h*3600-now_at_m*60
-			fukidasi("Count: "+tm+" sec. Until: "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
-			sleep (0.2)
+//			now_at=endtime-gettime()
+//			now_at_h=int(now_at/3600)
+//			now_at_m=int((now_at-now_at_h*3600)/60)
+//			now_at_s=now_at-now_at_h*3600-now_at_m*60
+//			fukidasi("Count: "+tm+" sec. Until: "+now_at_h+"hr. "+now_at_m+"min. "+now_at_s+"sec. File name: "+filename+cnt+".txt",250,0)
+//			sleep (0.2)
 		wend
 
-		BTN(LEFT,DOWN,1161,197,70)	// read deadtime
-		BTN(LEFT,UP,1100,197,70)
+		sleep(1)
+		BTN(LEFT,CLICK,1137,200,300)	// read deadtime
+		BTN(LEFT,CLICK,1137,200,100)
 		KBD(VK_CTRL,DOWN,70)
 		KBD(VK_C,CLICK,70)
 		KBD(VK_CTRL,UP,70)
+		sleep(1)
 		dtime=getstr(0,0,1,10)
 
 		deadtime=5
@@ -242,7 +242,7 @@ while true	// main loop while
 		savedatafile=filename+cnt+".txt"
 
 		ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
-//		BTN(LEFT,CLICK,190,36,300)	// stop
+//		BTN(LEFT,CLICK,193,38,300)	// stop
 		
 		ifb sshot=1 then		// Snapshot screen
 			ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)		
@@ -253,7 +253,7 @@ while true	// main loop while
 			while GETID("save image (.png)","#32770")<0
 			wend
 
-			ACW(GETID("save image (.png)","#32770",0.3),725,289,656,383,10)
+			ACW(GETID("save image (.png)","#32770",0.3),207,123,656,476,10)
 			sleep(1)
 			KBD(VK_BACK,CLICK,40)
 			sleep(1)
