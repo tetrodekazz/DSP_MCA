@@ -71,7 +71,7 @@ while true	// main loop while
 	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
 
 	BTN(LEFT,CLICK,65,289,300)	// Config window
-	sleep(0.3)
+	sleep(1)
 
 	SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
 
@@ -92,7 +92,7 @@ while true	// main loop while
 	sleep(0.3)
 
 	BTN(LEFT,CLICK,121,283,300)	// Histogram window
-	sleep(0.3)
+	sleep(1)
 
 	ACW(GETID("DSP MCA 3.2.0","LVDChild"),0,0,1210,742,10)
 	BTN(LEFT,CLICK,190,36,300)	// Stop
@@ -186,7 +186,7 @@ while true	// main loop while
 		sleep(0.3)
 
 		BTN(LEFT,CLICK,65,289,300)	// Config window
-		sleep(0.3)
+		sleep(1)
 
 		SendStr(GETID("DSP MCA 3.2.0","LVDChild"),"<#TAB><#TAB><#TAB><#TAB><#TAB>")
 
@@ -200,7 +200,7 @@ while true	// main loop while
 		sleep(0.3)
 
 		BTN(LEFT,CLICK,121,283,300)	// Histogram window
-		sleep(0.3)
+		sleep(1)
 
 		BTN(LEFT,CLICK,85,38,300)	// Config
 		sleep(3)
